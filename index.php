@@ -488,13 +488,16 @@ footer strong {
         <span>V I L L A</span>
     </div>
 
-    <nav>
-        <a href="index.php">Home</a>
-        <a href="#about">About</a>
-        <a href="#rooms">Our Rooms</a>
-        <a href="auth/login.php">Login</a>
-        <a href="auth/register.php" class="book-btn">Book Now</a>
-    </nav>
+    
+<nav>
+    <a href="index.php">Home</a>
+    <a href="#about">About</a>
+    <a href="#rooms">Our Rooms</a>
+    <a href="pages/availability.php">Check Availability</a>
+    <a href="auth/login.php">Login</a>
+    <a href="auth/register.php" class="book-btn">Book Now</a>
+</nav>
+
 </header>
 
 <!-- HERO SECTION -->

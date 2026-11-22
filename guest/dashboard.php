@@ -44,6 +44,14 @@ $rooms = $stmt->get_result();
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
+#rooms {
+    scroll-margin-top: 20px;
+}
+
 body {
     font-family: 'DM Sans', sans-serif;
     background: #f4f8f9;
@@ -278,6 +286,23 @@ footer {
         padding: 40px 6%;
     }
 }
+.book-room-btn {
+    display: block;
+    text-align: center;
+    background: #07536a;
+    color: white;
+    text-decoration: none;
+    padding: 13px;
+    border-radius: 6px;
+    margin-top: 20px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.book-room-btn:hover {
+    background: #078b96;
+    transform: translateY(-2px);
+}
 
 </style>
 </head>
@@ -291,12 +316,15 @@ footer {
         <span>V I L L A</span>
     </div>
 
-    <nav>
-        <a href="../index.php">Home</a>
-        <a href="#rooms">Explore Rooms</a>
-        <a href="my-bookings.php">My Bookings</a>
-        <a href="../auth/logout.php" class="logout">Logout</a>
-    </nav>
+    
+<nav>
+    <a href="../index.php">Home</a>
+    <a href="#rooms">Explore Rooms</a>
+    <a href="../pages/availability.php">Check Availability</a>
+    <a href="my-bookings.php">My Bookings</a>
+    <a href="../auth/logout.php" class="logout">Logout</a>
+</nav>
+
 
 </header>
 
@@ -356,15 +384,13 @@ footer {
             <?php while ($room = $rooms->fetch_assoc()): ?>
                     <div class="room-card">
 
-                       <?php
-                        $roomImages = [
-                            "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=85",
-                            "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=900&q=85",
-                            "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=900&q=85"
-                        ];
+                       <?php<div class="room-card">
 
-                        $image = $roomImages[$index % count($roomImages)];
-                        ?>
+                    <?php
+                        $image = !empty($room['image'])
+                        ? "../assets/images/rooms/" . htmlspecialchars($room['image'])
+                        : "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=85";
+                    ?>
 
                         <img
                             src="<?php echo htmlspecialchars($image); ?>"
@@ -396,6 +422,10 @@ footer {
                                 </div>
 
                             </div>
+                            <a href="book-room.php?room_id=<?php echo (int)$room['room_id']; ?>"
+                               class="book-room-btn">
+                                Book This Room →
+                            </a>
 
                         </div>
 

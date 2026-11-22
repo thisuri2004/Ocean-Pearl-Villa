@@ -337,9 +337,14 @@ button:hover {
 
                     <article class="room-card">
 
-                        <img src="<?= htmlspecialchars($image) ?>"
-                             alt="<?= htmlspecialchars($room["room_name"]) ?>">
+                       <?php
+                        $image = !empty($room['image'])
+                        ? "../assets/images/rooms/" . $room['image']
+                        : "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=85";
+                       ?>
 
+    <img src="<?= htmlspecialchars($image) ?>"
+         alt="<?= htmlspecialchars($room["room_name"]) ?>">
                         <div class="room-info">
 
                             <h3><?= htmlspecialchars($room["room_name"]) ?></h3>

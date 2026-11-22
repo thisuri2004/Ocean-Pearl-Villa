@@ -1,10 +1,9 @@
-
 <?php
 session_start();
 require_once "../config/database.php";
 
 // Admin access protection
-if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
+if (!isset($_SESSION["user_id"]) || !isset($_SESSION["role"]) || $_SESSION["role"] !== "admin") {
     header("Location: ../auth/login.php");
     exit();
 }
@@ -17,11 +16,12 @@ function e($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, "UTF-8");
 }
 
-// Add or Update Room
+// Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $action = $_POST["action"] ?? "";
 
+    // Add or Update Room
     if ($action === "add" || $action === "update") {
 
         $room_name = trim($_POST["room_name"] ?? "");
@@ -30,8 +30,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $price = (float)($_POST["price_per_night"] ?? 0);
         $capacity = (int)($_POST["capacity"] ?? 0);
         $facilities = trim($_POST["facilities"] ?? "");
-        $image = trim($_POST["image"] ?? "");
         $status = $_POST["status"] ?? "available";
+        $room_id = (int)($_POST["room_id"] ?? 0);
+        $image = "";
 
         if (
             $room_name === "" ||
@@ -43,98 +44,177 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $error = "Please enter valid room details.";
         } else {
 
-            if ($action === "add") {
-
-                $stmt = $conn->prepare(
-                    "INSERT INTO rooms
-                    (room_name, room_type, description, price_per_night,
-                    capacity, facilities, image, status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            // Preserve the current image when editing without uploading a new one
+            if ($action === "update") {
+                $checkImage = $conn->prepare(
+                    "SELECT image FROM rooms WHERE room_id = ?"
                 );
 
-                $stmt->bind_param(
-                    "sssdisss",
-                    $room_name,
-                    $room_type,
-                    $description,
-                    $price,
-                    $capacity,
-                    $facilities,
-                    $image,
-                    $status
-                );
+                if (!$checkImage) {
+                    $error = "Unable to check the existing room image.";
+                } else {
+                    $checkImage->bind_param("i", $room_id);
+                    $checkImage->execute();
+                    $existingRoom = $checkImage->get_result()->fetch_assoc();
+                    $checkImage->close();
 
-            } else {
-
-                $room_id = (int)($_POST["room_id"] ?? 0);
-
-                $stmt = $conn->prepare(
-                    "UPDATE rooms SET
-                    room_name = ?,
-                    room_type = ?,
-                    description = ?,
-                    price_per_night = ?,
-                    capacity = ?,
-                    facilities = ?,
-                    image = ?,
-                    status = ?
-                    WHERE room_id = ?"
-                );
-
-                $stmt->bind_param(
-                    "sssdisssi",
-                    $room_name,
-                    $room_type,
-                    $description,
-                    $price,
-                    $capacity,
-                    $facilities,
-                    $image,
-                    $status,
-                    $room_id
-                );
+                    if (!$existingRoom) {
+                        $error = "Room not found.";
+                    } else {
+                        $image = $existingRoom["image"] ?? "";
+                    }
+                }
             }
 
-            if ($stmt->execute()) {
-                $message = $action === "add"
-                    ? "Room added successfully!"
-                    : "Room updated successfully!";
-            } else {
-                $error = "Unable to save room details.";
+            // Validate and save an uploaded image, if one was selected
+            if (
+                $error === "" &&
+                isset($_FILES["room_image"]) &&
+                $_FILES["room_image"]["error"] !== UPLOAD_ERR_NO_FILE
+            ) {
+                if ($_FILES["room_image"]["error"] !== UPLOAD_ERR_OK) {
+                    $error = "Image upload failed. Please try again.";
+                } elseif ($_FILES["room_image"]["size"] > 5 * 1024 * 1024) {
+                    $error = "Image size must be less than 5 MB.";
+                } else {
+                    $tmpFile = $_FILES["room_image"]["tmp_name"];
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->file($tmpFile);
+
+                    $allowedTypes = [
+                        "image/jpeg" => "jpg",
+                        "image/png" => "png",
+                        "image/webp" => "webp"
+                    ];
+
+                    if (!isset($allowedTypes[$mimeType])) {
+                        $error = "Only JPG, PNG and WEBP images are allowed.";
+                    } else {
+                        $uploadDir = __DIR__ . "/../assets/images/rooms/";
+
+                        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
+                            $error = "Unable to create the room image folder.";
+                        } else {
+                            $extension = $allowedTypes[$mimeType];
+                            $newImageName = "room_" . bin2hex(random_bytes(8)) . "." . $extension;
+
+                            if (move_uploaded_file($tmpFile, $uploadDir . $newImageName)) {
+                                $image = $newImageName;
+                            } else {
+                                $error = "Unable to save uploaded image.";
+                            }
+                        }
+                    }
+                }
             }
 
-            $stmt->close();
+            // Save room details to the database
+            if ($error === "") {
+                if ($action === "add") {
+                    $stmt = $conn->prepare(
+                        "INSERT INTO rooms
+                        (room_name, room_type, description, price_per_night,
+                        capacity, facilities, image, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                    );
+
+                    if ($stmt) {
+                        $stmt->bind_param(
+                            "sssdisss",
+                            $room_name,
+                            $room_type,
+                            $description,
+                            $price,
+                            $capacity,
+                            $facilities,
+                            $image,
+                            $status
+                        );
+                    }
+                } else {
+                    $stmt = $conn->prepare(
+                        "UPDATE rooms SET
+                        room_name = ?,
+                        room_type = ?,
+                        description = ?,
+                        price_per_night = ?,
+                        capacity = ?,
+                        facilities = ?,
+                        image = ?,
+                        status = ?
+                        WHERE room_id = ?"
+                    );
+
+                    if ($stmt) {
+                        $stmt->bind_param(
+                            "sssdisssi",
+                            $room_name,
+                            $room_type,
+                            $description,
+                            $price,
+                            $capacity,
+                            $facilities,
+                            $image,
+                            $status,
+                            $room_id
+                        );
+                    }
+                }
+
+                if (!$stmt) {
+                    $error = "Unable to prepare the room database query.";
+                } elseif ($stmt->execute()) {
+                    $message = ($action === "add")
+                        ? "Room added successfully!"
+                        : "Room updated successfully!";
+                } else {
+                    $error = "Unable to save room details.";
+                }
+
+                if ($stmt) {
+                    $stmt->close();
+                }
+            }
         }
     }
 
     // Delete Room
     if ($action === "delete") {
-
         $room_id = (int)($_POST["room_id"] ?? 0);
 
         $check = $conn->prepare(
             "SELECT COUNT(*) AS total FROM bookings WHERE room_id = ?"
         );
-        $check->bind_param("i", $room_id);
-        $check->execute();
-        $bookingCount = $check->get_result()->fetch_assoc()["total"];
-        $check->close();
 
-        if ($bookingCount > 0) {
-            $error = "This room cannot be deleted because it has booking records.";
+        if (!$check) {
+            $error = "Unable to check room booking records.";
         } else {
-            $stmt = $conn->prepare(
-                "DELETE FROM rooms WHERE room_id = ?"
-            );
-            $stmt->bind_param("i", $room_id);
+            $check->bind_param("i", $room_id);
+            $check->execute();
+            $bookingCount = (int)$check->get_result()->fetch_assoc()["total"];
+            $check->close();
 
-            if ($stmt->execute() && $stmt->affected_rows > 0) {
-                $message = "Room deleted successfully!";
+            if ($bookingCount > 0) {
+                $error = "This room cannot be deleted because it has booking records.";
             } else {
-                $error = "Room could not be deleted.";
-            }
+                $stmt = $conn->prepare(
+                    "DELETE FROM rooms WHERE room_id = ?"
+                );
 
-            $stmt->close();
+                if (!$stmt) {
+                    $error = "Unable to prepare the room deletion query.";
+                } else {
+                    $stmt->bind_param("i", $room_id);
+
+                    if ($stmt->execute() && $stmt->affected_rows > 0) {
+                        $message = "Room deleted successfully!";
+                    } else {
+                        $error = "Room could not be deleted.";
+                    }
+
+                    $stmt->close();
+                }
+            }
         }
     }
 }
@@ -148,10 +228,13 @@ if (isset($_GET["edit"])) {
     $stmt = $conn->prepare(
         "SELECT * FROM rooms WHERE room_id = ?"
     );
-    $stmt->bind_param("i", $room_id);
-    $stmt->execute();
-    $editRoom = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+
+    if ($stmt) {
+        $stmt->bind_param("i", $room_id);
+        $stmt->execute();
+        $editRoom = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    }
 }
 
 // Get all rooms
@@ -401,7 +484,9 @@ th {
 
         <h2><?= $editRoom ? "Edit Room" : "Add New Room" ?></h2>
 
-        <form method="POST" action="rooms.php<?= $editRoom ? '?edit=' . (int)$editRoom['room_id'] : '' ?>">
+        <form method="POST"
+              enctype="multipart/form-data"
+              action="rooms.php<?= $editRoom ? '?edit=' . (int)$editRoom['room_id'] : '' ?>">
 
             <input type="hidden" name="action"
                    value="<?= $editRoom ? 'update' : 'add' ?>">
@@ -452,10 +537,9 @@ th {
                 </div>
 
                 <div class="field">
-                    <label>Room Image Filename</label>
-                    <input type="text" name="image"
-                           placeholder="ocean-view.jpg"
-                           value="<?= e($editRoom['image'] ?? '') ?>">
+                    <label>Upload Room Image</label>
+                    <input type="file" name="room_image" accept="image/jpeg,image/png,image/webp">
+                    <small>Allowed formats: JPG, PNG, WEBP</small>
                 </div>
 
                 <div class="field full">
