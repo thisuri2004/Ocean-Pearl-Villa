@@ -2,7 +2,7 @@
 # 🌊 Ocean Pearl Villa
 ### Dynamic Web-Based Coastal Villa and Room Booking System
 
-Ocean Pearl Villa is a web-based villa management and room booking system designed to provide guests with a convenient way to explore rooms, check availability, and manage reservations.
+Ocean Pearl Villa is a web-based villa management and room booking system designed to provide guests with a convenient way to explore rooms, check availability, and manage reservations. It also allows administrators to manage rooms and guest reservations efficiently.
 
 ## ✨ Features
 
@@ -39,6 +39,16 @@ Ocean Pearl Villa is a web-based villa management and room booking system design
 - PHP
 - MySQL
 - WAMP Server
+
+## 💻 Software Requirements
+
+- Operating System: Windows 10 or later
+- Web Server: WAMP Server
+- PHP: PHP 8.0 or later
+- Database: MySQL
+- Database Management: phpMyAdmin
+- Code Editor: Visual Studio Code
+- Web Browser: Google Chrome or Microsoft Edge
 
 ## 📁 Project Structure
 
@@ -88,10 +98,37 @@ OceanPearlVilla/
 
    `http://localhost/OceanPearlVilla/`
 
+**Note:** The `db_structure.sql` file includes database table structures and sample records for testing. Import it into a newly created database.
+
 ## 🔐 User Roles
 
-- **Guest:** Explore rooms and manage bookings.
-- **Admin:** Manage rooms and reservations.
+### Guest
+- Register and log in to the system.
+- Explore available rooms.
+- Search room availability.
+- Make room reservations.
+- View and manage pending bookings.
+
+### Admin
+- Log in to the administration panel.
+- Manage room information.
+- Upload room images.
+- View and manage guest reservations.
+- Confirm or cancel bookings.
+
+## 🔑 Sample Login Credentials
+
+### Guest Account
+
+- Email: `guest.demo@oceanpearlvilla.com`
+- Password: `Guest@123`
+
+### Admin Account
+
+- Email: `admin@oceanpearlvilla.com`
+- Password: `Admin@123`
+
+**Note:** These demo accounts are included in the sample data provided in `db_structure.sql`.
 
 ## 👩‍💻 Developer
 
@@ -99,7 +136,7 @@ OceanPearlVilla/
 
 ## 📌 Project Purpose
 
-This project was developed as an academic project to demonstrate web development concepts, database management, user authentication, room management, and online booking functionality.
+This project was developed as an academic project to demonstrate web development concepts, database management, user authentication, room management, image uploading, and online room booking functionality.
 
 ---
 
