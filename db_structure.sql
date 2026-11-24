@@ -82,6 +82,71 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 COMMIT;
 
+
+
+-- ==========================================
+-- OCEAN PEARL VILLA - SAMPLE RECORDS
+-- ==========================================
+
+-- Sample Users
+INSERT INTO `users`
+(`user_id`, `full_name`, `email`, `phone`, `password`, `role`)
+VALUES
+(1, 'Demo Guest', 'guest.demo@oceanpearlvilla.com',
+ '0771234567',
+ '$2y$10$Ne8UNI1rs1GzAzOlZ7UpUuoP6Hh3/jawPs27siKDzjDco.31EWQEG',
+ 'guest'),
+
+(2, 'Sample Guest Two', 'guest2@oceanpearlvilla.com',
+ '0712345678',
+ '$2y$10$Ne8UNI1rs1GzAzOlZ7UpUuoP6Hh3/jawPs27siKDzjDco.31EWQEG',
+ 'guest'),
+
+(3, 'Villa Administrator', 'admin@oceanpearlvilla.com',
+ '0751234567',
+ '$2y$10$ghq8axMHR8PTkl2DC59OFejVs5mXFCnkZJ4KGpqvhOFLNFsTeIDPe',
+ 'admin');
+
+
+-- Sample Rooms
+INSERT INTO `rooms`
+(`room_id`, `room_name`, `room_type`, `description`,
+ `price_per_night`, `capacity`, `facilities`, `image`, `status`)
+VALUES
+(1, 'Ocean View Deluxe', 'Deluxe Room',
+ 'Comfortable room with beautiful ocean views.',
+ 15000.00, 2,
+ 'Air Conditioning, Wi-Fi, Sea View',
+ 'ocean-view.jpg', 'available'),
+
+(2, 'Luxury Family Suite', 'Family Suite',
+ 'Spacious suite suitable for family stays.',
+ 25000.00, 4,
+ 'Air Conditioning, Wi-Fi, TV, Family Space',
+ 'family-suite.jpg', 'available'),
+
+(3, 'Premium Beach Villa', 'Premium Villa',
+ 'Premium villa offering a relaxing coastal experience.',
+ 35000.00, 6,
+ 'Air Conditioning, Wi-Fi, Private Balcony',
+ 'beach-villa.jpg', 'available');
+
+
+-- Sample Bookings
+INSERT INTO `bookings`
+(`booking_id`, `user_id`, `room_id`, `check_in`,
+ `check_out`, `guests`, `total_price`, `status`)
+VALUES
+(1, 1, 1, '2026-12-10', '2026-12-12',
+ 2, 30000.00, 'pending'),
+
+(2, 2, 2, '2026-12-15', '2026-12-18',
+ 3, 75000.00, 'confirmed'),
+
+(3, 1, 3, '2026-12-20', '2026-12-22',
+ 4, 70000.00, 'cancelled');
+
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
